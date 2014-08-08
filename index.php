@@ -51,6 +51,7 @@ class TreeCreator
 
     function placeNewNode(Node $currentNode, Node $newNode)
     {
+        $newNode->topNode = & $currentNode;
         if ($currentNode->value > $newNode->value) {
 
             if (!isset($currentNode->leftNode)) {
@@ -90,7 +91,7 @@ class TreeRenderer
 
             $this->htmlHeight = $this->htmlHeight / 2 - 5;
 
-            $this->html .= "<tr><td rowspan='2'>" . $node->value . "</td><td>";
+            $this->html .= "<tr><td rowspan='2'>" . $node->value . " (" . $node->topNode->value . ")" . "</td><td>";
             $this->renderTree($node->leftNode);
             $this->html .= "</td></tr>";
             $this->html .= "<tr><td>";
@@ -130,27 +131,57 @@ class BalanceTree
     {
         if ($node != null) {
             $this->subtreeHeightR++;
-            $this->getRightSubtreeHeight($node->rightNode);
+            return $this->getRightSubtreeHeight($node->rightNode);
         } else {
             return $this->subtreeHeightR;
         }
     }
-    public function getLeftSubtreeHeight(Node $node = null){
-        if($node != null){
+
+    public function getLeftSubtreeHeight(Node $node = null)
+    {
+        if ($node != null) {
             $this->subtreeHeightL++;
-            $this->getLeftSubtreeHeight($node->leftNode);
-        }else{
+            return $this->getLeftSubtreeHeight($node->leftNode);
+        } else {
             return $this->subtreeHeightL;
         }
     }
-    public function getBalanceFactor(Node $node){
+
+    public function getBalanceFactor(Node $node)
+    {
         $leftHeight = $this->getLeftSubtreeHeight($node);
         $rightHeight = $this->getRightSubtreeHeight($node);
 
-        if($leftHeight > $rightHeight){
+        if ($leftHeight > $rightHeight) {
             return $leftHeight;
-        }else{
+        } else {
             return $rightHeight;
+        }
+    }
+
+    public function rotateLeft(Node $node)
+    {
+        $tmp = $node->rightNode;
+        $node->rightNode = $tmp->leftNode;
+        $tmp->leftNode = $node;
+        $node = $tmp;
+        return $node;
+    }
+
+    public function balance(Node $node)
+    {
+        if ($this->getBalanceFactor($node->leftNode) == 2) {
+            $node->rightNode = $node->leftNode->leftNode;
+            if ($this->getBalanceFactor($node->rightNode) == -1) {
+                $this->rotateLeft($node->rightNode);
+            }
+            $this->rotateLeft($node->leftNode); // PRAWO
+        } else {
+            $node->rightNode = $node->leftNode->rightNode;
+            if ($this->getBalanceFactor($node->rightNode) == 1) {
+                $this->rotateLeft($node->rightNode); //PRAWO"
+            }
+            $this->rotateLeft($node->rightNode);
         }
     }
 }
